@@ -699,8 +699,13 @@ export class Input {
       } else if (!following || (this.directStick && lockedOn)) {
         if (x < -STICK_DEADZONE) down.add(KEY.LEFT);
         if (x > STICK_DEADZONE) down.add(KEY.RIGHT);
-        if (y < -STICK_DEADZONE) down.add(KEY.UP);
-        if (y > STICK_DEADZONE) down.add(KEY.DOWN);
+        if (this.directStick && following && lockedOn) {
+          if (y < -STICK_DEADZONE) down.add(KEY.DOWN);
+          if (y > STICK_DEADZONE) down.add(KEY.UP);
+        } else {
+          if (y < -STICK_DEADZONE) down.add(KEY.UP);
+          if (y > STICK_DEADZONE) down.add(KEY.DOWN);
+        }
       }
     }
     // turn-the-view buttons: the camera with dual-stick movement, the player with tank controls
