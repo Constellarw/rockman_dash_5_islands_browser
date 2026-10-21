@@ -139,9 +139,9 @@ sort_game_files() {
     for ext in jar jam sp; do
       [ -f "original/$variant/RockmanDASH.$ext" ] && continue
       if [ "$variant" = localized ]; then
-        found=$(find gamefiles "$pool" -type f -iname "*.$ext" -ipath '*localized*' ! -ipath '*delocalized*' | head -1)
+        found=$(find gamefiles "$pool" -type f ! -name '._*' ! -ipath '*/__MACOSX/*' -iname "*.$ext" -ipath '*localized*' ! -ipath '*delocalized*' | head -1)
       else
-        found=$(find gamefiles "$pool" -type f -iname "*.$ext" -ipath '*delocalized*' | head -1)
+        found=$(find gamefiles "$pool" -type f ! -name '._*' ! -ipath '*/__MACOSX/*' -iname "*.$ext" -ipath '*delocalized*' | head -1)
       fi
       if [ -n "$found" ]; then
         mkdir -p "original/$variant"
@@ -153,7 +153,7 @@ sort_game_files() {
   local f
   for f in "${SD_FILES[@]}"; do
     [ -f "original/sdcard/$f" ] && continue
-    found=$(find gamefiles "$pool" -type f -iname "$f" | head -1)
+    found=$(find gamefiles "$pool" -type f ! -name '._*' ! -ipath '*/__MACOSX/*' -iname "$f" | head -1)
     if [ -n "$found" ]; then
       mkdir -p original/sdcard
       cp "$found" "original/sdcard/$f"
@@ -177,7 +177,7 @@ sort_game_files() {
   else
     note "SD-card island data: $sd_missing of ${#SD_FILES[@]} files missing ($(missing_sd | head -4 | tr '\n' ' ')...)"
   fi
-  if [ ${#VARIANTS[@]} = 0 ] || [ "$sd_missing" != 0 ]; then
+  if [ ${#VARIANTS[@]} = 0 ]; then
     cat << 'TEXT'
 
   The game's own files are not part of this project; you need your own copy.
@@ -186,11 +186,13 @@ sort_game_files() {
 
     * the English patch for the game (its "Localized" and/or "Delocalized" folder, each with a
       .jar, a .jam and a .sp file)
-    * the game's SD-card data: 30 files named RDDATA0.BIN ... RDDATA44.BIN
 
   easy_setup_guide.md says more about what these are.
 TEXT
-    fail "game files are missing (see above)."
+    fail "English patch files are missing (see above)."
+  fi
+  if [ "$sd_missing" != 0 ]; then
+    note "SD-card data is missing; the game can only use data already bundled in the scratchpad"
   fi
 }
 

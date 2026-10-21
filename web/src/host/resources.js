@@ -39,6 +39,13 @@ async function fetchBytes(url) {
   return new Uint8Array(await r.arrayBuffer());
 }
 
+async function fetchOptionalBytes(url) {
+  const r = await fetch(url);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
 function parseJam(bytes) {
   // The .jam is Shift_JIS; only AppName is non-ASCII.
   const text = new TextDecoder('shift_jis').decode(bytes);
@@ -72,8 +79,8 @@ export class Resources {
       ...sdNames.map((n) => `${base}/sdcard/${n}`),
     ];
     let done = 0;
-    const files = await Promise.all(urls.map(async (u) => {
-      const b = await fetchBytes(u);
+    const files = await Promise.all(urls.map(async (u, i) => {
+      const b = i < 3 ? await fetchBytes(u) : await fetchOptionalBytes(u);
       progress(++done, urls.length);
       return b;
     }));
@@ -82,9 +89,13 @@ export class Resources {
     res.#initScratchpad(files[2]);
     // FAT names are case-insensitive: the dump is upper-case, the game asks for lower-case
     sdNames.forEach((n, i) => {
-      res.sd.set(n.toLowerCase(), files[3 + i]);
-      res.shipped.set(n.toLowerCase(), files[3 + i]);
+      const bytes = files[3 + i];
+      if (!bytes) return;
+      res.sd.set(n.toLowerCase(), bytes);
+      res.shipped.set(n.toLowerCase(), bytes);
     });
+    const missingSd = sdNames.length - res.sd.size;
+    if (missingSd) console.warn(`${missingSd} SD-card data files are missing; only bundled game data is available`);
 
     try {
       res.db = await openDB();

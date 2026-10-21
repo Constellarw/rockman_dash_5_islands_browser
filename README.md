@@ -128,13 +128,22 @@ Optional AI-upscaled textures (left: the original pixels, right: the texture pac
 
 ## Take it with you
 
-Once the game is set up on a Linux machine, two scripts turn it into something you can carry to
-other devices. Both play offline, and both contain your game files, so they are for your own use.
+Once the game is set up on a Linux machine, scripts turn it into something you can carry to other
+devices. The HTML and app packages play offline and contain your game files, so they are for your
+own use.
 
 | Script | What it makes | Use it for |
 |---|---|---|
 | `./package_html.sh` | One HTML file (about 40 MB; `--small` 13 MB, `--full` 140 MB) | Any computer or a Steam Deck: copy the file, open it in a browser. Good for archiving. |
 | `./package_android.sh` | An Android app, `.apk` (about 27 MB; `--small` 6 MB, `--full` 100 MB) | Phones and Android handhelds (AYN Thor, Retroid Pocket …). Full screen, landscape, uses the built-in or a Bluetooth controller, with on-screen controls when there is none. Android 8 or newer. |
+| `./package_ios.sh` | An unsigned iOS app, `.ipa` | iPhone or iPad: install and sign it with SideStore. Building locally requires macOS, Xcode and XcodeGen. |
+
+To build an iOS IPA without a Mac, run the **Build iOS IPA for SideStore** workflow in GitHub
+Actions. The workflow reads the ZIP from the private `Constellarw/dash5islands` repository and
+publishes the IPA to a private release there. Add the `RDASH_GAME_ASSETS_TOKEN` Actions secret to
+your fork; it needs Contents read/write access to that private repository. Download the IPA from
+the private release and open it in SideStore. The public source repository does not store the game
+ZIP or generated IPA.
 
 ![The Android app: full screen with on-screen controls](docs/android.jpg)
 

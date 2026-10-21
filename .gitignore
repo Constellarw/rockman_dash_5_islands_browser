@@ -7,6 +7,8 @@
 /web/dist/
 /web/public/game/
 /web/public/data/
+/tools/package/ios/Resources/game.html
+/tools/package/ios/RockmanDASH.xcodeproj/
 
 # the game itself: supply your own dump (see CLAUDE.md, "Game data"); never committed
 /original/

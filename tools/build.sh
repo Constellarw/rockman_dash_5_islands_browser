@@ -26,7 +26,12 @@ for v in "${variants[@]}"; do
   cp original/"$v"/RockmanDASH.{jar,jam,sp} "web/public/data/$v/"
 done
 mkdir -p web/public/data/sdcard
-cp original/sdcard/*.BIN web/public/data/sdcard/
+sd_files=(original/sdcard/*.BIN)
+if [[ -e "${sd_files[0]}" ]]; then
+  cp "${sd_files[@]}" web/public/data/sdcard/
+else
+  echo "no SD-card BINs found; only data bundled in the scratchpad will be available"
+fi
 
 [ -d web/node_modules ] || (cd web && npm install --no-audit --no-fund)
 

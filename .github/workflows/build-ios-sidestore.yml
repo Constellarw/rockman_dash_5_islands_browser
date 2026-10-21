@@ -1,0 +1,66 @@
+name: Build iOS IPA for SideStore
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Check out port source
+        uses: actions/checkout@v4
+
+      - name: Check private game asset settings
+        env:
+          ASSET_TOKEN: ${{ secrets.RDASH_GAME_ASSETS_TOKEN }}
+        run: |
+          [[ -n "$ASSET_TOKEN" ]] || { echo "Set secret RDASH_GAME_ASSETS_TOKEN with Contents read/write access to that private repository."; exit 1; }
+
+      - name: Check out private game assets
+        uses: actions/checkout@v4
+        with:
+          repository: Constellarw/dash5islands
+          token: ${{ secrets.RDASH_GAME_ASSETS_TOKEN }}
+          path: private-game-assets
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Prepare the game files
+        run: |
+          find private-game-assets -type f -iname '*.zip' -not -path '*/.git/*' -exec cp {} gamefiles/ \;
+          ./setup_script.sh --files-only
+          tools/build.sh localized
+
+      - name: Build unsigned IPA
+        run: ./package_ios.sh
+
+      - name: Publish IPA to the private asset repository
+        env:
+          GH_TOKEN: ${{ secrets.RDASH_GAME_ASSETS_TOKEN }}
+        run: |
+          tag="sidestore-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" build/package/Rockman-DASH-SideStore.ipa \
+            --repo Constellarw/dash5islands \
+            --title "SideStore IPA ${GITHUB_RUN_NUMBER}" \
+            --notes "Unsigned IPA for installation with SideStore."
+          echo "IPA uploaded to a private release in $ASSET_REPOSITORY (tag $tag)."
