@@ -111,7 +111,7 @@ export class Resources {
     } catch (e) {
       console.warn('IndexedDB unavailable; saves will not persist', e);
     }
-    res.#stampMembership();
+    res.#stampScratchpad();
     return res;
   }
 
@@ -143,6 +143,27 @@ export class Resources {
    * English patch skips that but then shows the storage-location prompt on every launch. Stamping
    * the current month makes the game start as it did for a subscriber in good standing.
    */
+  /**
+   * When SD-card files are missing, the game can only use data bundled in scratchpad segment 0.
+   * Segment 1 header holds [chunk_count (>= 5), island_idx, version, 0]. For New Game
+   * (target island 0), ensure segment 1 matches so the game boots directly into the bundled
+   * island without prompting for SD-card data or server downloads.
+   */
+  #stampScratchpad() {
+    this.#stampMembership();
+    const seg1 = this.segments[1];
+    if (!seg1 || seg1.length < 4) return;
+    const missingSd = 30 - this.sd.size;
+    if (missingSd > 0) {
+      const appParam = this.jam.AppParam ? this.jam.AppParam.trim().split(/\s+/) : [];
+      const version = Number(appParam[5]) || 1;
+      seg1[0] = Math.max(seg1[0], 5);
+      seg1[1] = 0;
+      seg1[2] = version;
+      seg1[3] = 0;
+    }
+  }
+
   #stampMembership() {
     const seg = this.segments[2];
     if (!seg || seg.length < 4) return;
